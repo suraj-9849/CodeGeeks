@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  Uid                     Int         @id @default(autoincrement())
+  email                   String      @unique
+  name                    String
+  password                String
+  ProblemSolved           Solved[]
+  createdAt               DateTime    @default(now())
+  isVerified              Boolean     @default(false)
+  verificationToken       String      @default("")
+  verificationTokenExpiry DateTime?   @default(now())
+  forgotPassword          String      @default("")
+  forgotPasswordExpiry    DateTime    @default(now())
+}
+
+model Solved{
+  pid Int @id
+  pName String
+  pLink String
+  pDifficulty String
+  isAttempted Boolean
+  isSolved Boolean
+  isFavourite Boolean
+  code String
+  User User @relation(fields: [uid], references: [Uid])
+  uid Int
+}
+
+
+model Problem{
+  pid Int @id
+  pName String
+  pDesc String
+  pDifficulty String
+  pExample examples[]
+  fcode String @default("")
+  pCode String  @default("")
+  lcode String @default("")
+  inpurTC String  @default("")
+  constraints String[]
+}
+
+model examples{
+  id Int @id @default(autoincrement())
+  input String
+  output String
+  explanation String
+  Problem Problem @relation(fields: [pid], references: [pid])
+  pid Int
+}
+
