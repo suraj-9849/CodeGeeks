@@ -1,5 +1,7 @@
 "use client"
 
+import Cookies from 'js-cookie';
+import {decode} from 'jsonwebtoken';
 import Navbar from "@/app/navbar/page";
 import Editor from "@monaco-editor/react"
 import axios from "axios";
@@ -12,6 +14,12 @@ import {
 } from "@/components/ui/resizable"
 
 export default function IDE({params} : any) {
+    const token = Cookies.get('token');
+    const user : {
+        id : string,
+        username : string,
+        email : string
+    } = token ? (decode(token) as any).tokenData : null;
     interface example {
       input : string,
       output : string,
@@ -27,6 +35,16 @@ export default function IDE({params} : any) {
         "vs-dark",
         "vs-light",
     ];
+
+    const [question , setQuestion] = useState({
+      pid : "",
+      pName : "",
+      pDesc : "",
+      pDifficulty : "",
+      pCode : "",
+      constraints : [],
+      inpTC : ""
+    });
 
     const language = [
       {
@@ -60,48 +78,104 @@ export default function IDE({params} : any) {
       fontSize: 18, 
     });
     const [UserInput, setUserInput] = useState("");
-    const [Output, setOutput] = useState("");
+    const [Output, setOutput] = useState("")
+
+    const submitted = async (e : any , sendData : {
+      uid : string,
+      pid : string,
+      pname : string,
+      pdiffiuclty : string,
+      code : string,
+      lang : string,
+      submit : boolean,
+      success : boolean
+    }) => {
+      try {
+          e.preventDefault();
+          console.log(e);
+          console.log("Check Sub is " , sendData);
+          const response =  await axios.post("/api/submit/codeSubmit" , sendData);
+          if(response.data.status === 200){
+            console.log("Code Saved Successfully")
+          }
+          else{
+            console.log("Code Didn't Save Saved Successfully")
+          }
+      } catch (error : any) {
+          console.log("Error Saving code", error);
+      }
+    }
+
 
     const handleSubmit = async (e : any) => {
         try {
             e.preventDefault();
             setOutput("Executing...");
+            console.log("hello" , question);
             const totalCode = snippets?.fcode + lang.defaultSyntax + snippets?.lcode;
             const reqBody = {
+                pid : params.id,
                 code : totalCode,
-                input : UserInput,
+                input: question.inpTC,
                 output : Output,
                 expectedOutput : "",
                 lang : lang.name,
                 timeLimit : 5,
                 memoryLimit : 256,
+                submit : true
             }
-            console.log("hello" , totalCode);
             const response =  await axios.post("/api/editor/codeExec" , reqBody);
+            const sendData = {
+              uid : user.id,
+              pid : params.id,
+              pname : question.pName,
+              pdiffiuclty : question.pDifficulty,
+              code : totalCode,
+              lang : lang.name,
+              submit : true,
+              success : response.data.status === 200 ? true : false,
+            }
             if(response.data.status === 200){
-              setOutput(response.data.data.output);
+              setOutput("All test Cases Passed Successfully");
+              submitted(e , sendData);
+            }
+            else{
+              submitted(e , sendData);
+              setOutput("Failed for Hidden TestCases");
             }
         } catch (error : any) {
             console.log("Error submitting code", error);
         }
     };
 
-
-    console.log(lang.defaultSyntax)
-    console.log("default " , language[0].defaultSyntax)
-
     const handleRun = async (e : any) => {
-        e.preventDefault();
+        try {
+          e.preventDefault();
+          setOutput("Executing...");
+          const totalCode = snippets?.fcode + lang.defaultSyntax + snippets?.lcode;
+          const reqBody = {
+              pid : params.id,
+              code : totalCode,
+              input : UserInput,
+              output : Output,
+              expectedOutput : "",
+              lang : lang.name,
+              timeLimit : 5,
+              memoryLimit : 256,
+              submit : false
+          }
+          console.log("hello" , totalCode);
+          const response =  await axios.post("/api/editor/codeExec" , reqBody);
+          if(response.data.status === 200){
+            setOutput(response.data.data.output);
+          }
+          else{
+            setOutput(response.data.err.error);
+          }
+      } catch (error : any) {
+          console.log("Error submitting code", error);
+      }
     }
-
-    const [question , setQuestion] = useState({
-      pid : "",
-      pName : "",
-      pDesc : "",
-      pDifficulty : "",
-      pCode : "",
-      constraints : [],
-    });
     const [examples , setExamples] = useState<example []>();
 
     useEffect(() => {
@@ -119,13 +193,18 @@ export default function IDE({params} : any) {
         const lastCode = res.data.data.problem.lcode;
         const lastFormat1 = lastCode.replace(/\\n/g, '\n');
         const lastFormat = lastFormat1.replace(/\\t/g, '\t');
+        const inputTc = res.data.data.problem.totaltcInp;
+        const inputTcFormatted1 = inputTc.replace(/\\n/g, '\n');
+        const inputTcFormatted2 = inputTcFormatted1.replace(/\\t/g, '\t');
+        const inputTcFormatted = inputTcFormatted2.replace(/ /g, '');
         setQuestion({
           pid : res.data.data.problem.pid,
           pName : res.data.data.problem.pName,
           pDesc : res.data.data.problem.pDesc,
           pDifficulty : res.data.data.problem.pDifficulty,
           pCode : formattedString,
-          constraints : res.data.data.problem.constraints
+          constraints : res.data.data.problem.constraints,
+          inpTC : inputTcFormatted
         });
         setSnippets({
           fcode : firstFormat,
@@ -290,31 +369,41 @@ export default function IDE({params} : any) {
         {/* testcases 1 2 3 section like leetcode*/}
         <div className="text-2xl mt-4">Testcases</div>
             <div>
+          <ResizablePanelGroup
+            direction="horizontal"
+            className="max-w-screen rounded-lg border"
+          >
+            <ResizablePanel>
               {/* Input Box*/}
-              <div className="text-2xl">Input</div>
+              <div className="text-2xl ml-2">Input</div>
               <textarea
                 className="border p-2"
                 style={{
                   width: "100%",
-                  height: "5vh",
+                  height: "16vh",
                 }}
                 placeholder="Enter your input here"
                 value={UserInput}
                 onChange={(e) => setUserInput(e.target.value)}
               ></textarea>
+            </ResizablePanel>
+            <ResizableHandle withHandle/>
               {/* Ouput Box*/}
-              <div className="text-2xl mt-4">Output</div>
+            <ResizablePanel>
+              <div className="text-2xl ml-2">Output</div>
               <textarea
                 className="border p-2"
                 style={{
                   width: "100%",
-                  height: "5vh",
+                  height: "16vh",
                 }}
                 placeholder="Your ouput"
                 value={Output}
                 readOnly
               ></textarea>
-            </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+          </div>
       </div>
         </ResizablePanel>
       </div>

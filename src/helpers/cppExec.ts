@@ -26,9 +26,9 @@ export function cppExec(
                     const executionResult = await execute(filePath, input, timeLimit, memoryLimit);
                     resolve(executionResult)
                 } else {
-                    console.log("Compilation Failed" , JSON.parse(JSON.stringify(err[0])));
                     reject({
                         message: "Compilation Failed",
+                        error: JSON.parse(JSON.stringify(err[0])),
                         status: 400
                     });
                 }
@@ -36,7 +36,7 @@ export function cppExec(
         } catch (error) {
             console.log("Error running code", error);
             reject({
-                message: "Error running code",
+                message: `Error running code: ${error}`,
                 status: 500
             });
         }
@@ -83,12 +83,6 @@ function execute(
                 console.error('Failed to start command:', err);
             });
             
-                // command.on('spawn', () => {
-                //     console.log('Command spawned, piping input stream...');
-                //     const inputStream = fs.createReadStream(inputFile);
-                //     inputStream.pipe(command.stdin);
-                // });
-            
                 let codeOutput = '';
                 command.stdout.on('data', (data) => {
                     const output = data.toString();
@@ -112,16 +106,13 @@ function execute(
                     };
                      resolve(response);
                 });
-
-                console.log("hey thos os me and how are you");
-
                 command.on('error', (error) => {
                     console.error(`Error executing code: ${error}`);
-                    throw new Error("Error executing code");
+                    throw new Error(`Error executing code: ${error}`);
                 });
         } catch (error) {
             console.log("error executing code", error);
-            throw new Error("Error executing code");
+            throw new Error(`Error executing code: ${error}`);
         }
     });
 }

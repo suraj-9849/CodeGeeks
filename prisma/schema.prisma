@@ -51,6 +51,8 @@ model Problem{
   pCode String  @default("")
   lcode String @default("")
   inpurTC String  @default("")
+  totaltcInp String  @default("")
+  totaltcOut String  @default("")
   constraints String[]
 }
 

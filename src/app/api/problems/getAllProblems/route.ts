@@ -15,7 +15,6 @@ export async function GET(request : NextRequest){
         })
     }
     catch(err : any){
-        // console.log("Error getting problems" , err);
         return NextResponse.json({
             error : err.message
         } , {

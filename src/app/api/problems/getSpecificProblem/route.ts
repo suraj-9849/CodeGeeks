@@ -15,7 +15,6 @@ export async function GET(request : NextRequest){
                 pid : Number(pid)
             }
         })
-        console.log(examples)
         return NextResponse.json({
             data : {
                 problem,

@@ -1,18 +1,29 @@
 import fs from 'fs'
 import { NextRequest , NextResponse} from 'next/server'
 import {cppExec} from '@/helpers/cppExec'
-
+import { tester } from '@/helpers/tester';
 
 
 export async function POST(request : NextRequest ){
     try {
         const body = await request.json();
-        const { code , input , lang , timeLimit , memoryLimit } = body;
+        const {pid ,  code , input , lang , timeLimit , memoryLimit , submit} = body;
         switch(lang){
             case "cpp":
                 const obj = await cppExec(code, input, timeLimit, memoryLimit);
                 console.log("OutPut result" , obj);
-                return NextResponse.json(obj);
+                if(!submit) return NextResponse.json(obj);
+                const testResult = await tester(obj.data.output , pid );
+                if(testResult){
+                    return NextResponse.json({
+                        message : "Test Cases Passed",
+                        status : 200
+                    });
+                }
+                return NextResponse.json({
+                    message : "Test Cases Failed",
+                    status : 400
+                });
                 break;
             case "python":
                 fs.writeFileSync("code.py" , code);
@@ -33,7 +44,8 @@ export async function POST(request : NextRequest ){
     } catch (error : any) {
         console.log("Error running code", error);
         return NextResponse.json({
-            message : "Error running code",
+            message : `Error running code`,
+            err : error,
             status : 500
         });
     }
