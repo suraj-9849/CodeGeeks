@@ -2,7 +2,7 @@
 
 import Cookies from 'js-cookie';
 import {decode} from 'jsonwebtoken';
-import Navbar from "@/app/navbar/page";
+import Navbar from '../../navbar/page';
 import Editor from "@monaco-editor/react"
 import axios from "axios";
 import {Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, cn} from "@nextui-org/react";
