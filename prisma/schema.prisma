@@ -42,7 +42,7 @@ model Solved{
 
 
 model Problem{
-  pid Int @id
+  pid Int @id  @default(autoincrement())
   pName String
   pDesc String
   pDifficulty String

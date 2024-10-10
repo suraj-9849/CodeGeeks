@@ -8,6 +8,8 @@ export async function POST(request : NextRequest ){
     try {
         const body = await request.json();
         const {pid ,  code , input , lang , timeLimit , memoryLimit , submit} = body;
+        console.log("Hello this is the input i got")
+        console.log(input);
         switch(lang){
             case "cpp":
                 const obj = await cppExec(code, input, timeLimit, memoryLimit);

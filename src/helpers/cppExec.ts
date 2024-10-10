@@ -11,6 +11,7 @@ export function cppExec(
     return new Promise((resolve, reject) => {
         try {
             const fileName = "code.cpp";
+            console.log(code);
             const filePath = `${__dirname}/${fileName}`;
             fs.writeFileSync(filePath, code, "utf-8");
             const compilation = spawn(`docker run --rm -v ${__dirname}:/exec cpp-runner g++ ${fileName} -o code`, { shell: true });
@@ -52,6 +53,8 @@ function execute(
     return new Promise((resolve, reject) => {
         try {
             input = input.replace("\r", "");
+            input = input.replace(/^"(.*)"$/, '$1'); 
+            console.log("INput : " ,input);
             const inputFile = `${__dirname}/input.txt`;
             const expectedOutput = '';
 
@@ -72,12 +75,13 @@ function execute(
                     '--network',
                     'none',
                     'cpp-runner',
-                    './code',
+                    'bash', '-c', 'ulimit -v 262144 && ./code < input.txt'
                 ],
                 {
                     stdio: ['pipe', 'pipe', 'pipe'],
                 }
             );
+            
             
             command.on('error', (err) => {
                 console.error('Failed to start command:', err);

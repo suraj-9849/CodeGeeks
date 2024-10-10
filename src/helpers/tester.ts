@@ -23,7 +23,10 @@ export const tester = async(genOutput : String , pid : String) => {
         const tscFormatted2 = tscFormatted1.replace(/\\t/g, '\t');
         const two = tscFormatted2.replace(/ /g, '');
         const tscArray = two?.split('\n');
-        // console.log("TSC Array", tscArray);
+        console.log("testcase : " ,tscArray);
+        console.log("original")
+        console.log(backendArray);
+        
         if(backendArray?.length !== tscArray?.length - 1){
             console.log("Length Mismatch", backendArray?.length, tscArray?.length)
             return false;

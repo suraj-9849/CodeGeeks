@@ -164,6 +164,7 @@ export default function IDE({params} : any) {
               memoryLimit : 256,
               submit : false
           }
+          console.log(reqBody);
           console.log("hello" , totalCode);
           const response =  await axios.post("/api/editor/codeExec" , reqBody);
           if(response.data.status === 200){
@@ -228,7 +229,7 @@ export default function IDE({params} : any) {
         <div className="flex items-start h-screen" style={{
           paddingTop : "3.6rem"
         }} >
-         {/* block to have question name description examples as on question with constraints */}
+         {/* block to have question name, description, examples, as on question with constraints */}
          <ResizablePanel defaultSize={60}>
          <div className="bg-white border border-gray-300 rounded-md shadow-md p-6 pb-28" style={{ height: '100vh', overflow: 'scroll' }}>
             <div className="text-2xl font-bold mb-2">{question.pid}.{question.pName}</div>
